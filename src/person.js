@@ -3,7 +3,6 @@ const url = ''
 mongoose.connect(url)
 
 const personSchema = mongoose.Schema({
-  _id: new mongoose.Types.ObjectId(),
   name: String,
   email: String,
   dateRanges: [
@@ -14,4 +13,15 @@ const personSchema = mongoose.Schema({
   ],
 })
 
-const person = mongoose.Model('person', personSchema)
+const Person = mongoose.Model('person', personSchema)
+
+exports.editPerson = (newPerson) => {
+  Person.findById(newPerson.id, (error, person) => {
+    if (error) {
+      reject(error)
+    } else {
+      person.dates = newPerson.dates
+      person.save()
+    }
+  })
+}

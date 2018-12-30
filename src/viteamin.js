@@ -1,4 +1,6 @@
 const mongoose = require('mongoose')
+const crypto = require('crypto')
+const person = require('person')
 const url = ''
 mongoose.connect(url)
 
@@ -21,43 +23,68 @@ const viteaminSchema = mongoose.Schema({
   notifyAdmin: Boolean,
   notifyNumPersons: Number,
   allowEdit: Boolean,
-  persons: [
-    {
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'Person'
-    },
-  ],
+  persons: [person],
   accessUrl: String,
   editUrl: String,
 })
 
 const Viteamin = mongoose.Model('event', viteaminSchema)
 
-exports.createViteamin = (newViteamin, callback) => {
+exports.createViteamin = (newViteamin) => {
   const viteamin = new Viteamin()
-  Object.assign(viteamin, newViteamin)
-  
-  //generate unique urls
-  viteamin.accessUrl = ''
-  viteamin.editUrl = ''
+  viteamin.set(newViteamin)
+
+  viteamin.accessUrl = generateRandomString((error, randString) => {
+    if (error) {
+      reject(error)
+    } else {
+      resolve(null, randString)
+    }
+  })
+
+  viteamin.editUrl = generateRandomString((error, randString) => {
+    if (error) {
+      reject(error)
+    } else {
+      resolve(null, randString)
+    }  
+  })
 
   viteamin.save((error, viteamin) => {
     if (error) {
-      callback(error)
+      reject(error)
     } else {
-      callback(null, viteamin)
+      resolve(null, viteamin)
     }
   })
 }
 
-exports.getViteamin = (url, callback) => {
-  Viteamin.findOne({accessUrl: url}).populate('persons').exec((error,viteamin) => {
+exports.getViteamin = (url) => {
+  Viteamin.findOne({accessUrl: url}, (error,viteamin) => {
     if (error) {
-      callback(error)
+      reject(error)
     } else {
-      callback(null, viteamin)
+      resolve(viteamin)
     }
   })
 }
 
-exports.updatePersonInViteamin = () => {}
+exports.addPerson = (url, newPerson) => {
+  Viteamin.findOne({accessUrl: url}, (error, viteamin) => {
+    if (error) {
+      reject(error)
+    } else {
+      viteamin.persons.push(newPerson)
+    }
+  })
+}
+
+function generateRandomString(){
+  const randString = crypto.getRandomBytes(3, (error, bytes) => {
+    if (error) {
+      throw error
+    } else {
+      return bytes.toString('hex')
+    }
+  })
+}
