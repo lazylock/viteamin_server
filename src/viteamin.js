@@ -7,13 +7,13 @@ mongoose.connect(url)
 const viteaminSchema = mongoose.Schema({
   name: String,
   timeRange: {
-    startTime: Date,
-    endTime: Date,
+    start: Date,
+    end: Date,
   },
   dateRanges: [
     {
-      startDate: Date,
-      endDate: Date
+      start: Date,
+      end: Date
     },
   ],
   baseTimeZone: String,
@@ -25,66 +25,45 @@ const viteaminSchema = mongoose.Schema({
   allowEdit: Boolean,
   persons: [person],
   accessUrl: String,
-  editUrl: String,
+  updateUrl: String,
 })
 
 const Viteamin = mongoose.Model('event', viteaminSchema)
 
-exports.createViteamin = (newViteamin) => {
+exports.createViteamin = async (newViteamin) => {
   const viteamin = new Viteamin()
   viteamin.set(newViteamin)
-
-  viteamin.accessUrl = generateRandomString((error, randString) => {
-    if (error) {
-      reject(error)
-    } else {
-      resolve(null, randString)
-    }
-  })
-
-  viteamin.editUrl = generateRandomString((error, randString) => {
-    if (error) {
-      reject(error)
-    } else {
-      resolve(null, randString)
-    }  
-  })
-
-  viteamin.save((error, viteamin) => {
-    if (error) {
-      reject(error)
-    } else {
-      resolve(null, viteamin)
-    }
-  })
+  viteamin.accessUrl = await crypto.getRandomBytes(3)
+  viteamin.editUrl = await crypto.getRandomBytes(3)
+  return await viteamin.save()
 }
 
-exports.getViteamin = (url) => {
-  Viteamin.findOne({accessUrl: url}, (error,viteamin) => {
-    if (error) {
-      reject(error)
-    } else {
-      resolve(viteamin)
-    }
-  })
+exports.updateViteamin = async (url, newViteamin) => {
+  const viteamin = await Viteamin.findOne({updateUrl: url})
+  if (!areEqualRanges(viteamin.timeRange, newViteamin.timeRange)) {
+    
+  }
+  if (!viteamin.dateRanges.every(dateRange1 => {
+      newViteamin.some(dateRange2 => {
+        areEqualRanges(dateRange1, dateRange2)
+      })
+    })
+  ) {
+    
+  }
+  viteamin.set(newViteamin)
+  return await viteamin.save()
 }
 
-exports.addPerson = (url, newPerson) => {
-  Viteamin.findOne({accessUrl: url}, (error, viteamin) => {
-    if (error) {
-      reject(error)
-    } else {
-      viteamin.persons.push(newPerson)
-    }
-  })
+exports.getViteamin = async (url) => {
+  return await Viteamin.findOne({accessUrl: url})
 }
 
-function generateRandomString(){
-  const randString = crypto.getRandomBytes(3, (error, bytes) => {
-    if (error) {
-      throw error
-    } else {
-      return bytes.toString('hex')
-    }
-  })
+exports.addPerson = async (url, newPerson) => {
+  const viteamin = await Viteamin.findOne({accessUrl: url})
+  return await viteamin.persons.push(newPerson)
+}
+
+function areEqualRanges(dateRange1, dateRange2) {
+  return (dateRange1.start === dateRange2.start && dateRange1.end === dateRange2.end)
 }

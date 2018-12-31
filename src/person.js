@@ -15,13 +15,6 @@ const personSchema = mongoose.Schema({
 
 const Person = mongoose.Model('person', personSchema)
 
-exports.editPerson = (newPerson) => {
-  Person.findById(newPerson.id, (error, person) => {
-    if (error) {
-      reject(error)
-    } else {
-      person.dates = newPerson.dates
-      person.save()
-    }
-  })
+exports.updatePerson = async(newPerson) => {
+  return await Person.findByIdAndUpdate(newPerson.id, {dateRanges: newPerson.dateRanges})
 }
