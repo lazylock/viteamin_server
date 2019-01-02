@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const url = ''
+const url = 'mongodb://localhost:27017/viteamin'
 mongoose.connect(url)
 
 const personSchema = mongoose.Schema({
@@ -14,7 +14,3 @@ const personSchema = mongoose.Schema({
 })
 
 const Person = mongoose.Model('person', personSchema)
-
-exports.updatePerson = async(newPerson) => {
-  return await Person.findByIdAndUpdate(newPerson.id, {dateRanges: newPerson.dateRanges})
-}

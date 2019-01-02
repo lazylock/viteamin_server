@@ -1,8 +1,12 @@
 const mongoose = require('mongoose')
 const crypto = require('crypto')
 const person = require('person')
-const url = ''
-mongoose.connect(url)
+
+const code = 'mongodb://localhost:27017/viteamin'
+mongoose.connect(code)
+
+const STATUS_OK = 200
+const STATUS_USER_ERROR = 422
 
 const viteaminSchema = mongoose.Schema({
   name: String,
@@ -24,8 +28,8 @@ const viteaminSchema = mongoose.Schema({
   notifyNumPersons: Number,
   allowEdit: Boolean,
   persons: [person],
-  accessUrl: String,
-  updateUrl: String,
+  accessCode: String,
+  updateCode: String,
 })
 
 const Viteamin = mongoose.Model('event', viteaminSchema)
@@ -33,13 +37,14 @@ const Viteamin = mongoose.Model('event', viteaminSchema)
 exports.createViteamin = async (newViteamin) => {
   const viteamin = new Viteamin()
   viteamin.set(newViteamin)
-  viteamin.accessUrl = await crypto.getRandomBytes(3)
-  viteamin.editUrl = await crypto.getRandomBytes(3)
+  viteamin.accessCode = await crypto.getRandomBytes(3)
+  viteamin.editcode = await crypto.getRandomBytes(3)
   return await viteamin.save()
 }
 
-exports.updateViteamin = async (url, newViteamin) => {
-  const viteamin = await Viteamin.findOne({updateUrl: url})
+/** 
+exports.updateViteamin = async (code, newViteamin) => {
+  const viteamin = await Viteamin.findOne({updateCode: code})
   if (!areEqualRanges(viteamin.timeRange, newViteamin.timeRange)) {
     
   }
@@ -54,14 +59,26 @@ exports.updateViteamin = async (url, newViteamin) => {
   viteamin.set(newViteamin)
   return await viteamin.save()
 }
+*/
 
-exports.getViteamin = async (url) => {
-  return await Viteamin.findOne({accessUrl: url})
+exports.getViteamin = async (code) => {
+  return await Viteamin.findOne({accessCode: code})
 }
 
-exports.addPerson = async (url, newPerson) => {
-  const viteamin = await Viteamin.findOne({accessUrl: url})
-  return await viteamin.persons.push(newPerson)
+exports.addPerson = async (code, newPerson) => {
+  try {
+    const viteamin = await Viteamin.findOne({accessCode: code})
+    return viteamin.persons.find(person => person.name === newPerson.name)
+  } catch(error) {
+    return await viteamin.persons.push(newPerson)
+  }
+}
+
+exports.updatePerson = async (code, updatePerson) => {
+  const viteamin = await Viteamin.findOne({accessCode: code})
+  const person = viteamin.persons.find(person => person.name === newPerson.name)
+  person.dateRanges = updatedPerson.dateRanges
+  return await viteamin.save()
 }
 
 function areEqualRanges(dateRange1, dateRange2) {
