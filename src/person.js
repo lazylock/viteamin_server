@@ -1,6 +1,4 @@
 const mongoose = require('mongoose')
-const url = 'mongodb://localhost:27017/viteamin'
-mongoose.connect(url)
 
 const personSchema = mongoose.Schema({
   name: String,
@@ -13,4 +11,5 @@ const personSchema = mongoose.Schema({
   ],
 })
 
-const Person = mongoose.Model('person', personSchema)
+const Person = mongoose.model('Person', personSchema)
+module.exports = Person

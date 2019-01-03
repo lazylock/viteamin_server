@@ -1,7 +1,7 @@
 const assert = require('assert')
-const vars = require('vars')
 const Person = require('../src/person')
 const Viteamin = require('../src/viteamin')
+const vars = require('./vars')
 
 describe('Test Mongoose', () => {
   it('Saves event to database', (done) => {

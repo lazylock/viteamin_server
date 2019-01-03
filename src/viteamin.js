@@ -1,12 +1,6 @@
 const mongoose = require('mongoose')
 const crypto = require('crypto')
-const person = require('person')
-
-const code = 'mongodb://localhost:27017/viteamin'
-mongoose.connect(code)
-
-const STATUS_OK = 200
-const STATUS_USER_ERROR = 422
+const person = require('./person')
 
 const viteaminSchema = mongoose.Schema({
   name: String,
@@ -27,12 +21,16 @@ const viteaminSchema = mongoose.Schema({
   notifyAdmin: Boolean,
   notifyNumPersons: Number,
   allowEdit: Boolean,
-  persons: [person],
+  persons: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Person',
+  }],
   accessCode: String,
   updateCode: String,
 })
 
-const Viteamin = mongoose.Model('event', viteaminSchema)
+const Viteamin = mongoose.model('Viteamin', viteaminSchema)
+exports = module.exports = Viteamin
 
 exports.createViteamin = async (newViteamin) => {
   const viteamin = new Viteamin()
@@ -62,12 +60,12 @@ exports.updateViteamin = async (code, newViteamin) => {
 */
 
 exports.getViteamin = async (code) => {
-  return await Viteamin.findOne({accessCode: code})
+  return await Viteamin.findOne({accessCode: code}).populate('persons')
 }
 
 exports.addPerson = async (code, newPerson) => {
   try {
-    const viteamin = await Viteamin.findOne({accessCode: code})
+    const viteamin = await Viteamin.findOne({accessCode: code}).populate('persons')
     return viteamin.persons.find(person => person.name === newPerson.name)
   } catch(error) {
     return await viteamin.persons.push(newPerson)
@@ -75,7 +73,7 @@ exports.addPerson = async (code, newPerson) => {
 }
 
 exports.updatePerson = async (code, updatePerson) => {
-  const viteamin = await Viteamin.findOne({accessCode: code})
+  const viteamin = await Viteamin.findOne({accessCode: code}).populate('persons')
   const person = viteamin.persons.find(person => person.name === newPerson.name)
   person.dateRanges = updatedPerson.dateRanges
   return await viteamin.save()
